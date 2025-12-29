@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Terminal | NOVA CORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --neon-blue: #00d4ff; --neon-red: #ff0055; --neon-yellow: #ffcc00;
+            --bg: #050505; --panel: rgba(15, 15, 20, 0.95);
+        }
+        body { 
+            background: var(--bg);
+            background-image: radial-gradient(circle at 50% 50%, #0a1118, #050505);
+            color: #fff; font-family: 'Segoe UI', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            min-height: 100vh; margin: 0; padding-top: 50px;
+        }
+
+        /* Container for Calc + History */
+        .wrapper { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 95%; max-width: 800px; }
+
+        .calc-container {
+            width: 320px; background: var(--panel); padding: 25px;
+            border-radius: 30px; border: 1px solid #222;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);
+        }
+
+        /* History Panel Style */
+        .history-container {
+            width: 300px; background: rgba(10, 10, 10, 0.8); padding: 20px;
+            border-radius: 25px; border: 1px solid #1a1a1a;
+            max-height: 480px; display: flex; flex-direction: column;
+        }
+        .history-title { color: var(--neon-yellow); font-size: 14px; letter-spacing: 2px; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        #historyList { overflow-y: auto; flex: 1; padding-right: 5px; }
+        .history-item { background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--neon-blue); font-size: 13px; }
+        .history-item span { color: #555; display: block; font-size: 11px; }
+
+        .screen {
+            width: 100%; height: 80px; background: #000; border: 1px solid #333;
+            border-radius: 15px; margin-bottom: 20px; padding: 15px;
+            box-sizing: border-box; display: flex; flex-direction: column;
+            justify-content: center; align-items: flex-end; overflow: hidden;
+        }
+        #exp { font-size: 12px; color: #555; height: 15px; }
+        #res { font-size: 28px; color: var(--neon-blue); font-weight: bold; }
+
+        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        
+        button {
+            height: 45px; border-radius: 10px; border: 1px solid #222;
+            background: rgba(255,255,255,0.03); color: #fff; font-weight: bold;
+            cursor: pointer; transition: 0.2s; font-size: 13px;
+        }
+        button:hover { background: rgba(0, 212, 255, 0.1); border-color: var(--neon-blue); }
+        
+        .op { color: var(--neon-yellow); }
+        .func { color: var(--neon-red); font-size: 10px; }
+        .ac { color: #ff4444; }
+        .equal { background: var(--neon-blue); color: #000; grid-column: span 2; }
+
+        .back-btn { position: absolute; top: 20px; left: 20px; text-decoration: none; color: #555; font-size: 12px; border: 1px solid #222; padding: 8px 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> DASHBOARD</a>
+
+    <div class="wrapper">
+        <div class="calc-container">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <span style="font-size: 9px; letter-spacing: 3px; color: #444;">SCIENTIFIC UNIT</span>
+            </div>
+            
+            <div class="screen">
+                <div id="exp"></div>
+                <div id="res">0</div>
+            </div>
+
+            <div class="btn-grid">
+                <button class="func" onclick="f('sin')">SIN</button>
+                <button class="func" onclick="f('cos')">COS</button>
+                <button class="func" onclick="f('tan')">TAN</button>
+                <button class="ac" onclick="clr()">AC</button>
+
+                <button class="func" onclick="f('log')">LOG</button>
+                <button class="func" onclick="f('sqrt')">√</button>
+                <button class="func" onclick="f('pow')">x²</button>
+                <button class="op" onclick="p('/')">÷</button>
+
+                <button onclick="p('7')">7</button>
+                <button onclick="p('8')">8</button>
+                <button onclick="p('9')">9</button>
+                <button class="op" onclick="p('*')">×</button>
+
+                <button onclick="p('4')">4</button>
+                <button onclick="p('5')">5</button>
+                <button onclick="p('6')">6</button>
+                <button class="op" onclick="p('-')">-</button>
+
+                <button onclick="p('1')">1</button>
+                <button onclick="p('2')">2</button>
+                <button onclick="p('3')">3</button>
+                <button class="op" onclick="p('+')">+</button>
+
+                <button onclick="p('0')">0</button>
+                <button onclick="p('.')">.</button>
+                <button class="equal" onclick="eq()">=</button>
+            </div>
+        </div>
+
+        <div class="history-container">
+            <div class="history-title"><i class="fas fa-history"></i> RECENT LOGS</div>
+            <div id="historyList">
+                <div style="color:#333; font-size: 12px; text-align:center; margin-top:20px;">No logs found.</div>
+            </div>
+            <button onclick="clearHistory()" style="height:30px; margin-top:10px; font-size:10px; background:none; border:1px solid #333; color:#555;">CLEAR LOGS</button>
+        </div>
+    </div>
+
+    <script>
+        let current = "";
+        const resDiv = document.getElementById('res');
+        const expDiv = document.getElementById('exp');
+        const historyList = document.getElementById('historyList');
+
+        function p(val) {
+            current += val;
+            resDiv.innerText = current;
+        }
+
+        function clr() {
+            current = "";
+            resDiv.innerText = "0";
+            expDiv.innerText = "";
+        }
+
+        function addToHistory(expression, result) {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `<span>${expression}</span> ${result}`;
+            historyList.prepend(item);
+            
+            // Remove the "No logs found" message
+            if (historyList.children.length > 0 && historyList.innerText.includes("No logs")) {
+                historyList.innerHTML = "";
+                historyList.prepend(item);
+            }
+        }
+
+        function clearHistory() {
+            historyList.innerHTML = '<div style="color:#333; font-size: 12px; text-align:center; margin-top:20px;">No logs found.</div>';
+        }
+
+        function eq() {
+            try {
+                let expression = current;
+                let result = eval(current).toString();
+                expDiv.innerText = expression + " =";
+                resDiv.innerText = result;
+                addToHistory(expression, result);
+                current = result;
+            } catch {
+                resDiv.innerText = "ERROR";
+                current = "";
+            }
+        }
+
+        function f(type) {
+            let v = parseFloat(current || "0");
+            let expression = `${type}(${v})`;
+            let result;
+
+            if(type === 'sin') result = Math.sin(v * Math.PI / 180).toFixed(4);
+            if(type === 'cos') result = Math.cos(v * Math.PI / 180).toFixed(4);
+            if(type === 'tan') result = Math.tan(v * Math.PI / 180).toFixed(4);
+            if(type === 'log') result = Math.log10(v).toFixed(4);
+            if(type === 'sqrt') result = Math.sqrt(v).toFixed(4);
+            if(type === 'pow') result = Math.pow(v, 2).toString();
+            
+            expDiv.innerText = expression;
+            resDiv.innerText = result;
+            addToHistory(expression, result);
+            current = result;
+        }
+    </script>
+</body>
+</html>

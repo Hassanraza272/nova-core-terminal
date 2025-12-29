@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Terminal | NOVA CORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --neon-blue: #00d4ff; --bg: #0b0b0d; --card-bg: #14141a; 
+        }
+        
+        body { 
+            background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0;
+        }
+
+        .back-nav { position: absolute; top: 30px; left: 30px; }
+        .back-btn {
+            text-decoration: none; color: #888; font-size: 11px; font-weight: bold;
+            border: 1px solid #333; padding: 8px 15px; border-radius: 6px;
+            text-transform: uppercase; transition: 0.3s;
+        }
+        .back-btn:hover { color: #fff; border-color: #555; background: rgba(255,255,255,0.05); }
+
+        .terminal-card {
+            width: 400px; background: var(--card-bg); padding: 40px;
+            border-radius: 25px; border: 1px solid #1f1f26;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center;
+        }
+
+        h2 { 
+            color: var(--neon-blue); letter-spacing: 4px; font-size: 18px; 
+            text-transform: uppercase; margin-bottom: 35px;
+        }
+
+        .field-group { margin-bottom: 25px; text-align: left; }
+        label { display: block; font-size: 10px; color: #555; margin-bottom: 10px; letter-spacing: 1.5px; font-weight: bold; }
+
+        .input-ctrl {
+            width: 100%; padding: 14px; background: #000; border: 1px solid #222;
+            color: #fff; border-radius: 12px; outline: none; box-sizing: border-box;
+            font-size: 14px; transition: 0.3s;
+        }
+        input.input-ctrl { 
+            color: var(--neon-blue); font-size: 22px; font-weight: bold; text-align: center; 
+        }
+        .input-ctrl:focus { border-color: var(--neon-blue); }
+
+        .action-btn {
+            width: 100%; padding: 16px; background: var(--neon-blue); color: #000;
+            border: none; border-radius: 12px; font-weight: 800; cursor: pointer;
+            margin-top: 10px; text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.3s; font-size: 13px;
+        }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4); }
+
+        .res-area {
+            margin-top: 30px; padding: 20px; border-radius: 15px;
+            background: rgba(0, 212, 255, 0.03); border: 1px dashed #1f2a30;
+            display: none;
+        }
+        #resVal { font-size: 24px; color: var(--neon-blue); font-weight: bold; display: block; }
+        #errorMsg { color: #ff0055; font-size: 10px; margin-top: 5px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="back-nav">
+        <a href="dashboard.html" class="back-btn">← DASHBOARD</a>
+    </div>
+
+    <div class="terminal-card">
+        <h2>Unit Terminal</h2>
+
+        <div class="field-group">
+            <label>ENTER VALUE</label>
+            <input type="number" id="input" class="input-ctrl" value="1">
+        </div>
+
+        <div class="field-group">
+            <label>FROM UNIT</label>
+            <select id="from" class="input-ctrl"></select>
+        </div>
+
+        <div style="color:#222; margin:10px 0;"><i class="fas fa-chevron-down"></i></div>
+
+        <div class="field-group">
+            <label>TO UNIT</label>
+            <select id="to" class="input-ctrl"></select>
+        </div>
+
+        <button class="action-btn" onclick="process()">Convert Now</button>
+
+        <div class="res-area" id="resBox">
+            <span id="resVal">0.00</span>
+            <div id="errorMsg">Mismatched units (e.g., Meters to KG)</div>
+        </div>
+    </div>
+
+    <script>
+        // Master Data with Category tags
+        const masterUnits = {
+            // Length
+            "m": { val: 1, cat: "len", n: "Meters" },
+            "km": { val: 0.001, cat: "len", n: "Kilometers" },
+            "cm": { val: 100, cat: "len", n: "Centimeters" },
+            "mile": { val: 0.000621, cat: "len", n: "Miles" },
+            "ft": { val: 3.280, cat: "len", n: "Feet" },
+            "inch": { val: 39.37, cat: "len", n: "Inches" },
+            // Weight
+            "kg": { val: 1, cat: "mass", n: "Kilograms (KG)" },
+            "g": { val: 1000, cat: "mass", n: "Grams" },
+            "lb": { val: 2.204, cat: "mass", n: "Pounds" },
+            "ton": { val: 0.001, cat: "mass", n: "Tons" },
+            "maund": { val: 0.025, cat: "mass", n: "Maund (Mun)" },
+            // Time
+            "hr": { val: 1, cat: "time", n: "Hours" },
+            "min": { val: 60, cat: "time", n: "Minutes" },
+            "sec": { val: 3600, cat: "time", n: "Seconds" },
+            "day": { val: 0.041, cat: "time", n: "Days" },
+            // Temperature (Special)
+            "c": { cat: "temp", n: "Celsius" },
+            "f": { cat: "temp", n: "Fahrenheit" },
+            "k": { cat: "temp", n: "Kelvin" }
+        };
+
+        function init() {
+            const f = document.getElementById('from');
+            const o = document.getElementById('to');
+            
+            Object.keys(masterUnits).forEach(k => {
+                let opt = `<option value="${k}">${masterUnits[k].n}</option>`;
+                f.innerHTML += opt;
+                o.innerHTML += opt;
+            });
+            f.value = "m";
+            o.value = "km";
+        }
+
+        function process() {
+            const v = parseFloat(document.getElementById('input').value);
+            const fKey = document.getElementById('from').value;
+            const tKey = document.getElementById('to').value;
+            
+            const from = masterUnits[fKey];
+            const to = masterUnits[tKey];
+            const err = document.getElementById('errorMsg');
+            const resBox = document.getElementById('resBox');
+            
+            resBox.style.display = "block";
+            err.style.display = "none";
+
+            // Check if categories match
+            if (from.cat !== to.cat) {
+                document.getElementById('resVal').innerText = "ERROR";
+                err.style.display = "block";
+                return;
+            }
+
+            let r = 0;
+            if (from.cat === 'temp') {
+                if (fKey === tKey) r = v;
+                else if (fKey === 'c' && tKey === 'f') r = (v * 9/5) + 32;
+                else if (fKey === 'f' && tKey === 'c') r = (v - 32) * 5/9;
+                else if (fKey === 'c' && tKey === 'k') r = v + 273.15;
+            } else {
+                r = v * (to.val / from.val);
+            }
+
+            document.getElementById('resVal').innerText = r.toLocaleString(undefined, {maximumFractionDigits: 4}) + " " + tKey.toUpperCase();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

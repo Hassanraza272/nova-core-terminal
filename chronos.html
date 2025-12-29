@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos Age Terminal | NOVA CORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --neon-red: #ff0055; --neon-blue: #00d4ff; --bg: #050505; --panel: rgba(15, 15, 20, 0.95);
+        }
+        body { 
+            background: var(--bg);
+            background-image: radial-gradient(circle at 50% 50%, #1a0505, #050505);
+            color: #fff; font-family: 'Segoe UI', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0;
+        }
+
+        .chronos-container {
+            width: 350px; background: var(--panel); padding: 30px;
+            border-radius: 30px; border: 1px solid #222;
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.15);
+            text-align: center;
+        }
+
+        h2 { color: var(--neon-red); letter-spacing: 5px; font-size: 20px; margin-bottom: 25px; text-shadow: 0 0 10px var(--neon-red); }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 10px; color: #555; margin-bottom: 8px; letter-spacing: 2px; }
+        
+        input[type="date"] {
+            width: 100%; padding: 12px; background: #000; border: 1px solid #333;
+            color: #fff; border-radius: 10px; outline: none; font-family: inherit; font-size: 14px;
+        }
+
+        .calc-btn {
+            width: 100%; padding: 15px; background: var(--neon-red); color: #fff;
+            border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
+            transition: 0.3s; margin-top: 10px; box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .calc-btn:hover { transform: scale(1.02); background: #ff1a66; }
+
+        .result-display {
+            margin-top: 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+        }
+        .res-box { 
+            background: rgba(0,0,0,0.5); padding: 15px 5px; border-radius: 15px; 
+            border: 1px solid #1a1a1a; transition: 0.3s;
+        }
+        .res-box:hover { border-color: var(--neon-blue); }
+        .res-box div:first-child { font-size: 22px; color: var(--neon-blue); font-weight: bold; margin-bottom: 5px; }
+        .res-box div:last-child { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px;
+            text-decoration: none; color: #555; font-size: 12px;
+            border: 1px solid #222; padding: 8px 15px; border-radius: 8px;
+            transition: 0.3s;
+        }
+        .back-btn:hover { color: var(--neon-red); border-color: var(--neon-red); }
+    </style>
+</head>
+<body>
+
+    <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> DASHBOARD</a>
+
+    <div class="chronos-container">
+        <i class="fas fa-hourglass-half" style="color: var(--neon-red); font-size: 40px; margin-bottom: 15px;"></i>
+        <h2>CHRONOS</h2>
+        
+        <div class="input-group">
+            <label>ENTER DATE OF BIRTH</label>
+            <input type="date" id="dob">
+        </div>
+
+        <button class="calc-btn" onclick="calculateAge()">Analyze Timeline</button>
+
+        <div class="result-display">
+            <div class="res-box">
+                <div id="y">--</div>
+                <div>Years</div>
+            </div>
+            <div class="res-box">
+                <div id="m">--</div>
+                <div>Months</div>
+            </div>
+            <div class="res-box">
+                <div id="d">--</div>
+                <div>Days</div>
+            </div>
+        </div>
+        
+        <p id="nextBday" style="margin-top: 20px; font-size: 11px; color: #444; font-style: italic;"></p>
+    </div>
+
+    <script>
+        function calculateAge() {
+            const dobInput = document.getElementById('dob').value;
+            if (!dobInput) {
+                alert("Target date missing! Please select DOB.");
+                return;
+            }
+
+            const birthDate = new Date(dobInput);
+            const today = new Date();
+
+            let years = today.getFullYear() - birthDate.getFullYear();
+            let months = today.getMonth() - birthDate.getMonth();
+            let days = today.getDate() - birthDate.getDate();
+
+            // Days adjustment
+            if (days < 0) {
+                months--;
+                // Get last day of previous month
+                let lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+                days += lastMonth.getDate();
+            }
+
+            // Months adjustment
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            // Update UI with Animation feel
+            animateValue("y", years);
+            animateValue("m", months);
+            animateValue("d", days);
+        }
+
+        function animateValue(id, value) {
+            const obj = document.getElementById(id);
+            obj.innerText = value;
+            obj.style.textShadow = "0 0 10px var(--neon-blue)";
+            setTimeout(() => { obj.style.textShadow = "none"; }, 500);
+        }
+    </script>
+</body>
+</html>

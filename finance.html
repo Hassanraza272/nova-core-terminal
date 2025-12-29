@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Core | NOVA CORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --neon-gold: #ffcc00; --bg: #0b0b0d; --card-bg: #14141a; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .back-nav { position: absolute; top: 30px; left: 30px; }
+        .back-btn { text-decoration: none; color: #888; font-size: 11px; border: 1px solid #333; padding: 8px 15px; border-radius: 6px; text-transform: uppercase; }
+        .terminal-card { width: 380px; background: var(--card-bg); padding: 40px; border-radius: 25px; border: 1px solid #1f1f26; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        h2 { color: var(--neon-gold); letter-spacing: 4px; font-size: 18px; margin-bottom: 30px; }
+        .field-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 10px; color: #555; margin-bottom: 8px; font-weight: bold; }
+        .input-ctrl { width: 100%; padding: 14px; background: #000; border: 1px solid #222; color: var(--neon-gold); border-radius: 12px; outline: none; box-sizing: border-box; font-size: 18px; text-align: center; }
+        .action-btn { width: 100%; padding: 16px; background: var(--neon-gold); color: #000; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 10px; text-transform: uppercase; transition: 0.3s; }
+        .action-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(255, 204, 0, 0.4); }
+        .res-area { margin-top: 25px; padding: 20px; border-radius: 15px; background: rgba(255, 204, 0, 0.05); border: 1px dashed #443c10; display: none; }
+        .res-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .res-val { color: var(--neon-gold); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="back-nav">
+        <a href="dashboard.html" class="back-btn">← DASHBOARD</a>
+    </div>
+
+    <div class="terminal-card">
+        <h2>Finance Core</h2>
+        <div class="field-group">
+            <label>LOAN AMOUNT</label>
+            <input type="number" id="p" class="input-ctrl" value="100000">
+        </div>
+        <div class="field-group">
+            <label>INTEREST RATE (%)</label>
+            <input type="number" id="r" class="input-ctrl" value="10">
+        </div>
+        <div class="field-group">
+            <label>TIME (YEARS)</label>
+            <input type="number" id="y" class="input-ctrl" value="1">
+        </div>
+        <button class="action-btn" onclick="calc()">Calculate Now</button>
+        <div class="res-area" id="box">
+            <div class="res-row"><span>Monthly EMI:</span><span class="res-val" id="v1">0</span></div>
+            <div class="res-row"><span>Total Interest:</span><span class="res-val" id="v2">0</span></div>
+            <div class="res-row"><span>Total Payable:</span><span class="res-val" id="v3">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        function calc() {
+            let P = parseFloat(document.getElementById('p').value);
+            let R = parseFloat(document.getElementById('r').value) / 12 / 100;
+            let N = parseFloat(document.getElementById('y').value) * 12;
+
+            if(P > 0 && R > 0 && N > 0) {
+                let emi = (P * R * Math.pow(1 + R, N)) / (Math.pow(1 + R, N) - 1);
+                let total = emi * N;
+                let interest = total - P;
+
+                document.getElementById('box').style.display = "block";
+                document.getElementById('v1').innerText = emi.toFixed(2);
+                document.getElementById('v2').innerText = interest.toFixed(2);
+                document.getElementById('v3').innerText = total.toFixed(2);
+            } else {
+                alert("Enter valid numbers!");
+            }
+        }
+    </script>
+</body>
+</html>

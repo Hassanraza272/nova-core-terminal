@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Terminal | NOVA CORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --neon-yellow: #ffcc00; --neon-blue: #00d4ff; --bg: #050505; --panel: rgba(15, 15, 20, 0.98);
+        }
+        body { 
+            background: var(--bg);
+            background-image: radial-gradient(circle at 50% 50%, #1a1a05, #050505);
+            color: #fff; font-family: 'Segoe UI', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0;
+        }
+
+        .converter-container {
+            width: 350px; background: var(--panel); padding: 25px;
+            border-radius: 30px; border: 1px solid #222;
+            box-shadow: 0 0 40px rgba(255, 204, 0, 0.1);
+        }
+
+        h2 { color: var(--neon-yellow); letter-spacing: 5px; font-size: 18px; text-align: center; margin-bottom: 25px; }
+
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 10px; color: #555; margin-bottom: 8px; letter-spacing: 2px; }
+
+        /* Step 1: Amount */
+        input[type="number"] {
+            width: 100%; padding: 12px; background: #000; border: 1px solid #333;
+            color: var(--neon-blue); border-radius: 10px; outline: none; font-size: 20px;
+            font-weight: bold; text-align: center; box-sizing: border-box;
+        }
+
+        /* Step 2 & 4: Selects */
+        select {
+            width: 100%; padding: 12px; background: #111; color: #fff;
+            border: 1px solid #333; border-radius: 10px; outline: none; cursor: pointer;
+        }
+
+        /* Centre Icon */
+        .mid-divider { text-align: center; margin: 10px 0; color: #333; }
+
+        /* Yellow Convert Button */
+        .convert-btn {
+            width: 100%; padding: 15px; background: var(--neon-yellow); color: #000;
+            border: none; border-radius: 12px; font-weight: 900; cursor: pointer;
+            margin-top: 20px; text-transform: uppercase; letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.3); transition: 0.3s;
+        }
+        .convert-btn:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(255, 204, 0, 0.5); }
+
+        /* Result Box */
+        .result-box {
+            margin-top: 25px; background: rgba(0, 212, 255, 0.05);
+            border: 1px dashed var(--neon-blue); border-radius: 15px;
+            padding: 20px; text-align: center; display: none;
+        }
+        #resValue { font-size: 24px; color: var(--neon-blue); font-weight: bold; display: block; }
+        #resRate { font-size: 10px; color: #555; margin-top: 5px; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px;
+            text-decoration: none; color: #555; font-size: 12px;
+            border: 1px solid #222; padding: 8px 15px; border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> DASHBOARD</a>
+
+    <div class="converter-container">
+        <h2>CURRENCY CORE</h2>
+
+        <div class="input-group">
+            <label>ENTER AMOUNT</label>
+            <input type="number" id="amount" value="100">
+        </div>
+
+        <div class="input-group">
+            <label>SENDING FROM</label>
+            <select id="fromCurrency"></select>
+        </div>
+
+        <div class="mid-divider">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+
+        <div class="input-group">
+            <label>RECEIVING IN</label>
+            <select id="toCurrency"></select>
+        </div>
+
+        <button class="convert-btn" onclick="performConversion()">
+            <i class="fas fa-sync-alt"></i> Convert Now
+        </button>
+
+        <div class="result-box" id="resultPanel">
+            <span id="resValue">0.00</span>
+            <div id="resRate">1 USD = 0.00 PKR</div>
+        </div>
+    </div>
+
+    <script>
+        const currencies = {
+            "USD": "United States Dollar", "PKR": "Pakistani Rupee", "INR": "Indian Rupee",
+            "EUR": "Euro", "GBP": "British Pound", "AED": "UAE Dirham", "SAR": "Saudi Riyal",
+            "CAD": "Canadian Dollar", "AUD": "Australian Dollar", "JPY": "Japanese Yen",
+            "CNY": "Chinese Yuan", "TRY": "Turkish Lira", "RUB": "Russian Ruble",
+            "SGD": "Singapore Dollar", "CHF": "Swiss Franc", "MYR": "Malaysian Ringgit",
+            "THB": "Thai Baht", "KWD": "Kuwaiti Dinar", "QAR": "Qatari Rial",
+            "OMR": "Omani Rial", "BHD": "Bahraini Dinar", "AFN": "Afghan Afghani",
+            "BDT": "Bangladeshi Taka", "LKR": "Sri Lankan Rupee", "NZD": "New Zealand Dollar",
+            "ZAR": "South African Rand", "BRL": "Brazilian Real", "KRW": "South Korean Won",
+            "IDR": "Indonesian Rupiah", "MXN": "Mexican Peso", "PHP": "Philippine Peso"
+        };
+
+        function init() {
+            const f = document.getElementById('fromCurrency');
+            const t = document.getElementById('toCurrency');
+            
+            Object.keys(currencies).forEach(c => {
+                f.innerHTML += `<option value="${c}">${c} - ${currencies[c]}</option>`;
+                t.innerHTML += `<option value="${c}">${c} - ${currencies[c]}</option>`;
+            });
+            
+            f.value = "USD";
+            t.value = "PKR";
+        }
+
+        async function performConversion() {
+            const amt = document.getElementById('amount').value;
+            const from = document.getElementById('fromCurrency').value;
+            const to = document.getElementById('toCurrency').value;
+            const resPanel = document.getElementById('resultPanel');
+
+            if(!amt || amt <= 0) { alert("Please enter a valid amount"); return; }
+
+            resPanel.style.display = "block";
+            document.getElementById('resValue').innerText = "Processing...";
+
+            try {
+                const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${from}`);
+                const data = await response.json();
+                const rate = data.rates[to];
+                const final = (amt * rate).toLocaleString(undefined, {minimumFractionDigits: 2});
+
+                document.getElementById('resValue').innerText = `${final} ${to}`;
+                document.getElementById('resRate').innerText = `Exchange Rate: 1 ${from} = ${rate.toFixed(4)} ${to}`;
+            } catch (e) {
+                document.getElementById('resValue').innerText = "OFFLINE";
+                document.getElementById('resRate').innerText = "Check your internet connection.";
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
